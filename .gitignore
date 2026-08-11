@@ -1,0 +1,10 @@
+.idea/
+.venv/
+__pycache__/
+*.pyc
+config.json
+data/
+build/
+dist/
+*.spec
+protoc.exe
