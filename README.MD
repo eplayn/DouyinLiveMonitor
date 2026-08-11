@@ -40,7 +40,7 @@ python main.py                    # 启动 GUI
 python main.py <直播间ID>          # 自动连接指定直播间
 ```
 
-### 配置 Cookie（获取礼物消息必需）
+### 配置 Cookie（获取礼物消息和直播流必需）
 
 1. 浏览器打开 https://live.douyin.com 并登录
 2. F12 → 控制台 → 输入 `document.cookie` 回车

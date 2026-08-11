@@ -20,7 +20,7 @@ CONFIG_FILE = "config.json"
 # ==================== 通过 API 获取直播间信息 ====================
 def fetch_room_info(rid, cookie=""):
     """通过直播间 ID 获取主播昵称和开播状态，失败返回 None。
-    cookie 为空时只用 ttwid（可能不准），建议传入完整的登录 Cookie。
+    开播状态无需 Cookie；传 Cookie 可额外获取直播流用于播放。
     """
     try:
         session = requests.Session()
@@ -601,7 +601,7 @@ class ChatWindow:
                 "2. 按 F12 → 控制台(Console)\n"
                 "3. 输入 document.cookie 并回车\n"
                 "4. 复制完整结果粘贴到下方\n"
-                "（Cookie 用于准确判断开播状态，可不填）")
+                "（用于接收礼物消息和获取直播流，可不填）")
         tk.Label(win, text=tips, font=("微软雅黑", 9), fg="#aaaaaa", bg="#2d2d2d",
                  justify=tk.LEFT).pack(pady=5)
 
