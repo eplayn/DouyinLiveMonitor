@@ -57,6 +57,15 @@ python main.py <直播间ID>          # 自动连接指定直播间
 └── .gitignore
 ```
 
+## 开发说明
+
+`protobuf/douyin.proto` 是协议定义源文件，`douyin.py` 已由 protoc 编译生成，**运行时不需要 protoc**。如需重新生成：
+
+```bash
+pip install protoc
+protoc -I protobuf --python_betterproto_out=protobuf protobuf/douyin.proto
+```
+
 ## 数据格式
 
 存档在 `data/主播名（ID）/日期.jsonl`，每行一条：
