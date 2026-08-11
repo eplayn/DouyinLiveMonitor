@@ -28,6 +28,11 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+> 如果国内镜像缺包报错，改用官方源：
+> ```bash
+> pip install -i https://pypi.org/simple/ -r requirements.txt
+> ```
+
 ## 使用
 
 ```bash
