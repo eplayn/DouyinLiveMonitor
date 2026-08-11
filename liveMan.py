@@ -6,7 +6,6 @@
 # @Author:      bubu
 # @Project:     douyinLiveWebFetcher
 
-import codecs
 import gzip
 import hashlib
 import random
@@ -14,30 +13,13 @@ import re
 import string
 import threading
 import time
-import execjs
 import urllib.parse
 
 import requests
 import websocket
 from py_mini_racer import MiniRacer
 
-from ac_signature import get__ac_signature
 from protobuf.douyin import *
-
-from urllib3.util.url import parse_url
-
-
-def execute_js(js_file: str):
-    """
-    执行 JavaScript 文件
-    :param js_file: JavaScript 文件路径
-    :return: 执行结果
-    """
-    with open(js_file, 'r', encoding='utf-8') as file:
-        js_code = file.read()
-    
-    ctx = execjs.compile(js_code)
-    return ctx
 
 
 
@@ -57,7 +39,7 @@ def generateSignature(wss, script_file='sign.js'):
     md5.update(param.encode())
     md5_param = md5.hexdigest()
     
-    with codecs.open(script_file, 'r', encoding='utf8') as f:
+    with open(script_file, 'r', encoding='utf-8') as f:
         script = f.read()
     
     ctx = MiniRacer()
@@ -87,13 +69,12 @@ def generateMsToken(length=182):
 
 class DouyinLiveWebFetcher:
 
-    def __init__(self, live_id, abogus_file='a_bogus.js', on_chat_message=None, on_message=None, cookie=None):
+    def __init__(self, live_id, on_chat_message=None, on_message=None, cookie=None):
         """
         直播间弹幕抓取对象
         :param live_id: 直播间的直播id
         :param cookie: 登录后的完整 Cookie，用于接收礼物等需要登录的消息
         """
-        self.abogus_file = abogus_file
         self.on_chat_message = on_chat_message
         self.on_message = on_message
         self.cookie = cookie or ""
@@ -162,64 +143,6 @@ class DouyinLiveWebFetcher:
 
             self.__room_id = match.group(1)
             return self.__room_id
-    
-    def get_ac_nonce(self):
-        """
-        获取 __ac_nonce
-        """
-        resp_cookies = self.session.get(self.host, headers=self.headers).cookies
-        return resp_cookies.get("__ac_nonce")
-    
-    def get_ac_signature(self, __ac_nonce: str = None) -> str:
-        """
-        获取 __ac_signature
-        """
-        __ac_signature = get__ac_signature(self.host[8:], __ac_nonce, self.user_agent)
-        self.session.cookies.set("__ac_signature", __ac_signature)
-        return __ac_signature
-    
-    def get_a_bogus(self, url_params: dict):
-        """
-        获取 a_bogus
-        """
-        url = urllib.parse.urlencode(url_params)
-        ctx = execute_js(self.abogus_file)
-        _a_bogus = ctx.call("get_ab", url, self.user_agent)
-        return _a_bogus
-    
-    def get_room_status(self):
-        """
-        获取直播间开播状态:
-        room_status: 2 直播已结束
-        room_status: 0 直播进行中
-        """
-        msToken = generateMsToken()
-        nonce = self.get_ac_nonce()
-        signature = self.get_ac_signature(nonce)
-        url = ('https://live.douyin.com/webcast/room/web/enter/?aid=6383'
-               '&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&enter_from=page_refresh'
-               '&cookie_enabled=true&screen_width=5120&screen_height=1440&browser_language=zh-CN&browser_platform=Win32'
-               '&browser_name=Edge&browser_version=140.0.0.0'
-               f'&web_rid={self.live_id}'
-               f'&room_id_str={self.room_id}'
-               '&enter_source=&is_need_double_stream=false&insert_task_id=&live_reason=&msToken=' + msToken)
-        query = parse_url(url).query
-        params = {i[0]: i[1] for i in [j.split('=') for j in query.split('&')]}
-        a_bogus = self.get_a_bogus(params)  # 计算a_bogus,成功率不是100%，出现失败时重试即可
-        url += f"&a_bogus={a_bogus}"
-        headers = self.headers.copy()
-        headers.update({
-            'Referer': f'https://live.douyin.com/{self.live_id}',
-            'Cookie': f'ttwid={self.ttwid};__ac_nonce={nonce}; __ac_signature={signature}',
-        })
-        resp = self.session.get(url, headers=headers)
-        data = resp.json().get('data')
-        if data:
-            room_status = data.get('room_status')
-            user = data.get('user')
-            user_id = user.get('id_str')
-            nickname = user.get('nickname')
-            print(f"【{nickname}】[{user_id}]直播间：{['正在直播', '已结束'][bool(room_status)]}.")
     
     def _connectWebSocket(self):
         """
